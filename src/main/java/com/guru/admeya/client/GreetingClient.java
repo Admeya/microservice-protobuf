@@ -1,4 +1,4 @@
-package com.guru.admeya;
+package com.guru.admeya.client;
 
 import com.proto.dummy.DummyServiceGrpc;
 import io.grpc.ManagedChannel;
