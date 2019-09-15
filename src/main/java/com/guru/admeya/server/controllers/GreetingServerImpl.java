@@ -1,4 +1,4 @@
-package com.guru.admeya.server;
+package com.guru.admeya.server.controllers;
 
 import com.proto.greet.Greet;
 import com.proto.greet.GreetRequest;
@@ -9,8 +9,9 @@ import io.grpc.stub.StreamObserver;
 
 public class GreetingServerImpl extends GreetServiceGrpc.GreetServiceImplBase {
 
-    @Override public void greet(GreetRequest request, StreamObserver<GreetResponse> responseObserver) {
-        //super.greet(request, responseObserver);
+    @Override
+    public void greet(GreetRequest request, StreamObserver<GreetResponse> responseObserver) {
+
         Greeting greeting = request.getGreeting();
         String firstName = greeting.getFirstName();
 

@@ -1,5 +1,7 @@
 package com.guru.admeya.server;
 
+import com.guru.admeya.server.controllers.CalculatorServerImpl;
+import com.guru.admeya.server.controllers.GreetingServerImpl;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 
@@ -12,6 +14,7 @@ public class GreetingServer {
 
         Server server = ServerBuilder.forPort(50051)
             .addService(new GreetingServerImpl())
+            .addService(new CalculatorServerImpl())
             .build();
         server.start();
 
