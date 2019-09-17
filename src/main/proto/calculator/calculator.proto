@@ -13,6 +13,20 @@ message calcResponse {
     int32 result = 1;
 }
 
+message SquareRootRequest {
+    int32 number = 1;
+}
+
+message SquareRootResponse {
+    double number_root = 1;
+}
+
 service CalcResult {
     rpc Calculator(calcRequest) returns (calcResponse) {};
+
+    // error handling
+    // this RPC will throw exception if the sent number is negative
+    rpc SquareRoot(SquareRootRequest) returns (SquareRootResponse) {};
+
+
 }
