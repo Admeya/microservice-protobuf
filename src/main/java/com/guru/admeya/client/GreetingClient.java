@@ -7,28 +7,99 @@ import com.proto.greet.GreetServiceGrpc;
 import com.proto.greet.GreetWithDeadLineRequest;
 import com.proto.greet.GreetWithDeadLineResponse;
 import com.proto.greet.Greeting;
+import com.proto.greet.LongGreetRequest;
+import com.proto.greet.LongGreetResponse;
 import io.grpc.Deadline;
-import io.grpc.ManagedChannel;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import io.grpc.stub.StreamObserver;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class GreetingClient extends GrpcClient{
+
     public static void main(String[] args) {
         // DummyServiceGrpc.DummyServiceBlockingStub syncClient = DummyServiceGrpc.newBlockingStub(channel);
 
         GreetingClient main = new GreetingClient();
-        ManagedChannel channel = main.run();
+        main.run();
         // created a greet service client (blocking - synchronous
         GreetServiceGrpc.GreetServiceBlockingStub greetClient = main.createStubGreet(channel);
         //main.doUnaryCall(channel, greetClient);
-        main.doServerStreamingCall(channel, greetClient);
+        //main.doServerStreamingCall(greetClient);
+        main.doClientStreamingCall();
+
         System.out.println("Shutting down");
         channel.shutdown();
     }
 
-    private void doServerStreamingCall(ManagedChannel channel, GreetServiceGrpc.GreetServiceBlockingStub greetClient) {
+    private void doClientStreamingCall() {
+        GreetServiceGrpc.GreetServiceStub asyncClient = GreetServiceGrpc.newStub(channel);
+
+        CountDownLatch latch = new CountDownLatch(1);
+
+        StreamObserver<LongGreetRequest> requestObserver = asyncClient.longGreet(new StreamObserver<LongGreetResponse>() {
+            @Override
+            public void onNext(LongGreetResponse longGreetResponse) {
+                // we get a response from the server
+                System.out.println("Received a response from the server");
+                System.out.println(longGreetResponse.getResult());
+                //onNext will be called only once
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+
+            }
+
+            @Override
+            public void onCompleted() {
+                //the server is done sending us data
+                System.out.println("Server has completed sending us something");
+                // onCompleted will be called right after onNext
+                latch.countDown();
+            }
+        });
+
+        // streaming message #1
+        System.out.println("sending message 1");
+        requestObserver.onNext(LongGreetRequest.newBuilder()
+            .setGreeting(
+                Greeting.newBuilder()
+                .setFirstName("Irina")
+                .build()
+            ).build());
+
+        // streaming message #2
+        System.out.println("sending message 2");
+        requestObserver.onNext(LongGreetRequest.newBuilder()
+            .setGreeting(
+                Greeting.newBuilder()
+                    .setFirstName("Dmitry")
+                    .build()
+            ).build());
+
+        // streaming message #3
+        System.out.println("sending message 3");
+        requestObserver.onNext(LongGreetRequest.newBuilder()
+            .setGreeting(
+                Greeting.newBuilder()
+                    .setFirstName("Nastya")
+                    .build()
+            ).build());
+
+        // we tell the server that the client is done sending data
+        requestObserver.onCompleted();
+
+        try {
+            latch.await(3L, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void doServerStreamingCall(GreetServiceGrpc.GreetServiceBlockingStub greetClient) {
         GreetManyTimesRequest request = GreetManyTimesRequest
             .newBuilder()
             .setGreeting(Greeting.newBuilder().setFirstName("Irina"))
@@ -40,7 +111,7 @@ public class GreetingClient extends GrpcClient{
     }
 
     // Unary call
-    private void doUnaryCall(ManagedChannel channel, GreetServiceGrpc.GreetServiceBlockingStub greetClient) {
+    private void doUnaryCall(GreetServiceGrpc.GreetServiceBlockingStub greetClient) {
         // created a protocol buffer greeting message
         Greeting greeting = Greeting
             .newBuilder()
@@ -58,7 +129,7 @@ public class GreetingClient extends GrpcClient{
         System.out.println(greetResponse.getResult());
     }
 
-    private void doUnaryCallWithDeadline(ManagedChannel channel, int duration, String text) {
+    private void doUnaryCallWithDeadline(int duration, String text) {
         try {
             System.out.println(String.format("Sending a request with a deadline of %s ms", duration));
             GreetWithDeadLineResponse response = createStubGreet(channel)

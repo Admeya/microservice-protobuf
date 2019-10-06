@@ -35,11 +35,21 @@ message GreetManyTimesResponse {
     string result = 1;
 }
 
+message LongGreetRequest {
+    Greeting greeting = 1;
+}
+
+message LongGreetResponse {
+    string result = 1;
+}
+
 service GreetService {
     //Unary
     rpc Greet(GreetRequest) returns (GreetResponse) {};
 
     rpc GreetManyTimes(GreetManyTimesRequest) returns (stream GreetManyTimesResponse) {};
+
+    rpc LongGreet(stream LongGreetRequest) returns (LongGreetResponse) {};
     // RPC with deadline
     // this Rpc will complete
     rpc GreetWithDeadline(GreetWithDeadLineRequest) returns (GreetWithDeadLineResponse) {};

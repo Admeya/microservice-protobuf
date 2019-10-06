@@ -8,6 +8,8 @@ import com.proto.greet.GreetServiceGrpc;
 import com.proto.greet.GreetWithDeadLineRequest;
 import com.proto.greet.GreetWithDeadLineResponse;
 import com.proto.greet.Greeting;
+import com.proto.greet.LongGreetRequest;
+import com.proto.greet.LongGreetResponse;
 import io.grpc.Context;
 import io.grpc.stub.StreamObserver;
 
@@ -20,7 +22,7 @@ public class GreetingServerImpl extends GreetServiceGrpc.GreetServiceImplBase {
         Greeting greeting = request.getGreeting();
         String firstName = greeting.getFirstName();
 
-        // cresate the response
+        // create the response
         String result = "Hello " + firstName;
         GreetResponse response = GreetResponse.newBuilder()
             .setResult(result)
@@ -83,5 +85,36 @@ public class GreetingServerImpl extends GreetServiceGrpc.GreetServiceImplBase {
         }
 
         responseObserver.onCompleted();
+    }
+
+    @Override
+    public StreamObserver<LongGreetRequest> longGreet(StreamObserver<LongGreetResponse> responseObserver) {
+        return new StreamObserver<LongGreetRequest>() {
+
+            String result = "";
+
+            @Override
+            public void onNext(LongGreetRequest value) {
+                // client sends a message
+                result += "Hello " + value.getGreeting().getFirstName() + "! ";
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                // client sends an error
+            }
+
+            @Override
+            public void onCompleted() {
+                // client is done
+                responseObserver.onNext(
+                    LongGreetResponse.newBuilder()
+                    .setResult(result)
+                    .build()
+                );
+                responseObserver.onCompleted();
+                // this is when we want to return a response (responceObserver)
+            }
+        };
     }
 }
