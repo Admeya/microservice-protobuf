@@ -1,34 +1,80 @@
 package com.guru.admeya.client;
 
 import com.proto.calculator.CalculatorServiceGrpc;
+import com.proto.calculator.ComputeAverageRequest;
+import com.proto.calculator.ComputeAverageResponse;
 import com.proto.calculator.PrimeNumberDecompositionRequest;
 import com.proto.calculator.SquareRootRequest;
 import com.proto.calculator.SumRequest;
 import com.proto.calculator.SumResponse;
 import io.grpc.StatusRuntimeException;
+import io.grpc.stub.StreamObserver;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class CalculatorClient extends GrpcClient {
     public static void main(String[] args) {
-        GreetingClient main = new GreetingClient();
+        CalculatorClient main = new CalculatorClient();
         main.run();
         // created a greet service client (blocking - synchronous
-        CalculatorServiceGrpc.CalculatorServiceBlockingStub greetClient = main.createStubCalc(channel);
-        //sumTwoNumbers(channel, greetClient);
-        primeDivision(greetClient);
-        // doErrorCall(channel);
+        // CalculatorServiceGrpc.CalculatorServiceBlockingStub greetClient = main.createStubCalc(channel);
+        //main.sumTwoNumbers(channel, greetClient);
+        //main.primeDivision(greetClient);
+        main.doClientStreamingCall();
+        // main.doErrorCall(channel);
         System.out.println("Shutting down");
         channel.shutdown();
 
     }
 
-    private static void primeDivision(CalculatorServiceGrpc.CalculatorServiceBlockingStub greetClient) {
+    private void doClientStreamingCall() {
+        CalculatorServiceGrpc.CalculatorServiceStub asyncClient = CalculatorServiceGrpc.newStub(channel);
+        CountDownLatch latch = new CountDownLatch(1);
+
+        StreamObserver<ComputeAverageRequest> request = asyncClient
+            .computeAverage(new StreamObserver<ComputeAverageResponse>() {
+                @Override
+                public void onNext(ComputeAverageResponse computeAverageResponse) {
+                    System.out.println("Received a response from the server");
+                    System.out.println(computeAverageResponse.getAverage());
+                }
+
+                @Override
+                public void onError(Throwable throwable) {
+
+                }
+
+                @Override
+                public void onCompleted() {
+                    System.out.println("Server has completed sending data");
+                    latch.countDown();
+                }
+            });
+
+        for (int i = 0; i < 10000; i++) {
+            request.onNext(ComputeAverageRequest.newBuilder()
+                .setNumber(i)
+                .build());
+        }
+
+        request.onCompleted();
+
+        try {
+            latch.await(5L, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void primeDivision(CalculatorServiceGrpc.CalculatorServiceBlockingStub greetClient) {
         Integer number = 567890;
         greetClient.primeNumberDecomposition(PrimeNumberDecompositionRequest.newBuilder().setNumber(number).build())
             .forEachRemaining(primeNumberDecompositionResponse ->
                 System.out.println(primeNumberDecompositionResponse.getPrimeFactor()));
     }
 
-    private static void sumTwoNumbers(CalculatorServiceGrpc.CalculatorServiceBlockingStub greetClient) {
+    private void sumTwoNumbers(CalculatorServiceGrpc.CalculatorServiceBlockingStub greetClient) {
         SumRequest request = SumRequest.newBuilder()
             .setFirstNumber(10)
             .setSecondNumber(3)
@@ -38,7 +84,7 @@ public class CalculatorClient extends GrpcClient {
             + " = " + response.getSumResult());
     }
 
-    private static void doErrorCall(CalculatorServiceGrpc.CalculatorServiceBlockingStub greetClient) {
+    private void doErrorCall(CalculatorServiceGrpc.CalculatorServiceBlockingStub greetClient) {
         int number = -1;
         try {
             greetClient.squareRoot(SquareRootRequest.newBuilder()

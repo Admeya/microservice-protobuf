@@ -1,6 +1,8 @@
 package com.guru.admeya.server.controllers;
 
 import com.proto.calculator.CalculatorServiceGrpc;
+import com.proto.calculator.ComputeAverageRequest;
+import com.proto.calculator.ComputeAverageResponse;
 import com.proto.calculator.PrimeNumberDecompositionRequest;
 import com.proto.calculator.PrimeNumberDecompositionResponse;
 import com.proto.calculator.SquareRootRequest;
@@ -58,5 +60,38 @@ public class CalculatorServerImpl extends CalculatorServiceGrpc.CalculatorServic
                 divisor = divisor + 1;
             }
         }
+    }
+
+    @Override public StreamObserver<ComputeAverageRequest> computeAverage(
+        StreamObserver<ComputeAverageResponse> responseObserver) {
+
+        StreamObserver<ComputeAverageRequest> requestObserver = new StreamObserver<ComputeAverageRequest>() {
+            //running sum and count
+            int sum = 0;
+            int count = 0;
+
+            @Override
+            public void onNext(ComputeAverageRequest computeAverageRequest) {
+                sum += computeAverageRequest.getNumber();
+                count++;
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+
+            }
+
+            @Override
+            public void onCompleted() {
+                double average = (double) sum/count;
+                responseObserver.onNext(
+                    ComputeAverageResponse.newBuilder()
+                        .setAverage(average)
+                        .build()
+                );
+                responseObserver.onCompleted();
+            }
+        };
+        return requestObserver;
     }
 }

@@ -13,8 +13,8 @@ public class GreetingServer {
         System.out.println("hello grpc");
 
         Server server = ServerBuilder.forPort(50051)
-            .addService(new GreetingServerImpl())
-           // .addService(new CalculatorServerImpl())
+           // .addService(new GreetingServerImpl())
+            .addService(new CalculatorServerImpl())
             .build();
         server.start();
 
