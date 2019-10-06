@@ -1,34 +1,33 @@
 package com.guru.admeya.server.controllers;
 
-import com.proto.calculator.CalcResultGrpc;
-import com.proto.calculator.Calculator;
-import com.proto.greet.GreetRequest;
-import com.proto.greet.GreetResponse;
-import com.proto.greet.GreetServiceGrpc;
-import com.proto.greet.Greeting;
+import com.proto.calculator.CalculatorServiceGrpc;
+import com.proto.calculator.SquareRootRequest;
+import com.proto.calculator.SquareRootResponse;
+import com.proto.calculator.SumRequest;
+import com.proto.calculator.SumResponse;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
-public class CalculatorServerImpl extends CalcResultGrpc.CalcResultImplBase {
+public class CalculatorServerImpl extends CalculatorServiceGrpc.CalculatorServiceImplBase {
 
     @Override
-    public void calculator(Calculator.calcRequest request,
-        StreamObserver<Calculator.calcResponse> responseObserver) {
-        Calculator.calcResponse response = Calculator.calcResponse.newBuilder()
-            .setResult(request.getFirstNumber() + request.getSecondNumber()).build();
+    public void sum(SumRequest request, StreamObserver<SumResponse> responseObserver) {
+        SumResponse response = SumResponse.newBuilder()
+            .setSumResult(request.getFirstNumber() + request.getSecondNumber())
+            .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
 
     @Override
-    public void squareRoot(Calculator.SquareRootRequest request,
-        StreamObserver<Calculator.SquareRootResponse> responseObserver) {
+    public void squareRoot(SquareRootRequest request,
+        StreamObserver<SquareRootResponse> responseObserver) {
         int number = request.getNumber();
 
         if (number >= 0) {
             double numberRoot = Math.sqrt(number);
             responseObserver.onNext(
-                Calculator.SquareRootResponse.newBuilder()
+                SquareRootResponse.newBuilder()
                     .setNumberRoot(numberRoot)
                     .build()
             );
