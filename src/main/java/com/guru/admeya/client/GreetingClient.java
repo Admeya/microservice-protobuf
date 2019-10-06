@@ -9,20 +9,19 @@ import com.proto.greet.GreetWithDeadLineResponse;
 import com.proto.greet.Greeting;
 import io.grpc.Deadline;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 
 import java.util.concurrent.TimeUnit;
 
-public class GreetingClient {
+public class GreetingClient extends GrpcClient{
     public static void main(String[] args) {
         // DummyServiceGrpc.DummyServiceBlockingStub syncClient = DummyServiceGrpc.newBlockingStub(channel);
 
         GreetingClient main = new GreetingClient();
         ManagedChannel channel = main.run();
         // created a greet service client (blocking - synchronous
-        GreetServiceGrpc.GreetServiceBlockingStub greetClient = main.createStub(channel);
+        GreetServiceGrpc.GreetServiceBlockingStub greetClient = main.createStubGreet(channel);
         //main.doUnaryCall(channel, greetClient);
         main.doServerStreamingCall(channel, greetClient);
         System.out.println("Shutting down");
@@ -59,26 +58,10 @@ public class GreetingClient {
         System.out.println(greetResponse.getResult());
     }
 
-    // create client channel
-    private ManagedChannel run() {
-        System.out.println("hello i'm a gRPC client");
-
-        ManagedChannel channel = ManagedChannelBuilder
-            .forAddress("localhost", 50051)
-            .usePlaintext()
-            .build();
-        System.out.println("Creating stub");
-        return channel;
-    }
-
-    private GreetServiceGrpc.GreetServiceBlockingStub createStub(ManagedChannel channel) {
-        return GreetServiceGrpc.newBlockingStub(channel);
-    }
-
     private void doUnaryCallWithDeadline(ManagedChannel channel, int duration, String text) {
         try {
             System.out.println(String.format("Sending a request with a deadline of %s ms", duration));
-            GreetWithDeadLineResponse response = createStub(channel)
+            GreetWithDeadLineResponse response = createStubGreet(channel)
                 .withDeadline(Deadline.after(duration, TimeUnit.MILLISECONDS))
                 .greetWithDeadline(
                     GreetWithDeadLineRequest.newBuilder()

@@ -22,8 +22,18 @@ message SquareRootResponse {
     double number_root = 1;
 }
 
+message PrimeNumberDecompositionRequest {
+    int32 number = 1;
+}
+
+message PrimeNumberDecompositionResponse {
+    int32 prime_factor = 1;
+}
+
 service CalculatorService {
     rpc Sum(SumRequest) returns (SumResponse) {};
+
+    rpc PrimeNumberDecomposition(PrimeNumberDecompositionRequest) returns ( stream PrimeNumberDecompositionResponse) {};
 
     // error handling
     // this RPC will throw exception if the sent number is negative
