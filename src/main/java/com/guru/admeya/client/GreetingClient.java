@@ -1,5 +1,6 @@
 package com.guru.admeya.client;
 
+import com.proto.greet.GreetManyTimesRequest;
 import com.proto.greet.GreetRequest;
 import com.proto.greet.GreetResponse;
 import com.proto.greet.GreetServiceGrpc;
@@ -16,27 +17,37 @@ import java.util.concurrent.TimeUnit;
 
 public class GreetingClient {
     public static void main(String[] args) {
+        // DummyServiceGrpc.DummyServiceBlockingStub syncClient = DummyServiceGrpc.newBlockingStub(channel);
+
         GreetingClient main = new GreetingClient();
         ManagedChannel channel = main.run();
-        main.firstGreeting(channel);
+        // created a greet service client (blocking - synchronous
+        GreetServiceGrpc.GreetServiceBlockingStub greetClient = main.createStub(channel);
+        //main.doUnaryCall(channel, greetClient);
+        main.doServerStreamingCall(channel, greetClient);
         System.out.println("Shutting down");
         channel.shutdown();
     }
 
-    private void firstGreeting(ManagedChannel channel) {
-        // DummyServiceGrpc.DummyServiceBlockingStub syncClient = DummyServiceGrpc.newBlockingStub(channel);
+    private void doServerStreamingCall(ManagedChannel channel, GreetServiceGrpc.GreetServiceBlockingStub greetClient) {
+        GreetManyTimesRequest request = GreetManyTimesRequest
+            .newBuilder()
+            .setGreeting(Greeting.newBuilder().setFirstName("Irina"))
+            .build();
+        // we stream the responses in a blocking manner
+        greetClient.greetManyTimes(request)
+            .forEachRemaining(greetManyTimesResponse ->
+                System.out.println(greetManyTimesResponse.getResult()));
+    }
 
-        // created a greet service client (blocking - synchronous
-        GreetServiceGrpc.GreetServiceBlockingStub greetClient =
-            GreetServiceGrpc.newBlockingStub(channel);
-
+    // Unary call
+    private void doUnaryCall(ManagedChannel channel, GreetServiceGrpc.GreetServiceBlockingStub greetClient) {
         // created a protocol buffer greeting message
         Greeting greeting = Greeting
             .newBuilder()
             .setFirstName("Irina")
             .setLastName("Bykova")
             .build();
-
         // do the same for a GreetRequest
         GreetRequest greetRequest = GreetRequest
             .newBuilder()
@@ -48,6 +59,7 @@ public class GreetingClient {
         System.out.println(greetResponse.getResult());
     }
 
+    // create client channel
     private ManagedChannel run() {
         System.out.println("hello i'm a gRPC client");
 
@@ -56,19 +68,17 @@ public class GreetingClient {
             .usePlaintext()
             .build();
         System.out.println("Creating stub");
-
-        //  doUnaryCallWithDeadline(channel, 4000, "");
-        //  doUnaryCallWithDeadline(channel, 100, "");
-
         return channel;
     }
 
-    private void doUnaryCallWithDeadline(ManagedChannel channel, int duration, String text) {
-        GreetServiceGrpc.GreetServiceBlockingStub blockingStub = GreetServiceGrpc.newBlockingStub(channel);
+    private GreetServiceGrpc.GreetServiceBlockingStub createStub(ManagedChannel channel) {
+        return GreetServiceGrpc.newBlockingStub(channel);
+    }
 
+    private void doUnaryCallWithDeadline(ManagedChannel channel, int duration, String text) {
         try {
             System.out.println(String.format("Sending a request with a deadline of %s ms", duration));
-            GreetWithDeadLineResponse response = blockingStub
+            GreetWithDeadLineResponse response = createStub(channel)
                 .withDeadline(Deadline.after(duration, TimeUnit.MILLISECONDS))
                 .greetWithDeadline(
                     GreetWithDeadLineRequest.newBuilder()

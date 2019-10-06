@@ -1,6 +1,7 @@
 package com.guru.admeya.server.controllers;
 
-import com.proto.greet.Greet;
+import com.proto.greet.GreetManyTimesRequest;
+import com.proto.greet.GreetManyTimesResponse;
 import com.proto.greet.GreetRequest;
 import com.proto.greet.GreetResponse;
 import com.proto.greet.GreetServiceGrpc;
@@ -59,6 +60,28 @@ public class GreetingServerImpl extends GreetServiceGrpc.GreetServiceImplBase {
             e.printStackTrace();
         }
 
+    }
 
+    @Override
+    public void greetManyTimes(GreetManyTimesRequest request,
+        StreamObserver<GreetManyTimesResponse> responseObserver) {
+        String firstName = request.getGreeting().getFirstName();
+
+        try {
+            for (int i = 0; i < 10; i++) {
+                String result = "Hello " + firstName + ", response number: " + i;
+                GreetManyTimesResponse response = GreetManyTimesResponse.newBuilder()
+                    .setResult(result)
+                    .build();
+                responseObserver.onNext(response);
+                Thread.sleep(1000L);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            responseObserver.onCompleted();
+        }
+
+        responseObserver.onCompleted();
     }
 }

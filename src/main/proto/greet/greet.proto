@@ -26,9 +26,20 @@ message GreetWithDeadLineResponse {
     string result = 1;
 }
 
+// Server can send some message to client
+message GreetManyTimesRequest {
+    Greeting greeting = 1;
+}
+
+message GreetManyTimesResponse {
+    string result = 1;
+}
+
 service GreetService {
     //Unary
     rpc Greet(GreetRequest) returns (GreetResponse) {};
+
+    rpc GreetManyTimes(GreetManyTimesRequest) returns (stream GreetManyTimesResponse) {};
     // RPC with deadline
     // this Rpc will complete
     rpc GreetWithDeadline(GreetWithDeadLineRequest) returns (GreetWithDeadLineResponse) {};
