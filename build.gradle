@@ -23,7 +23,7 @@ repositories {
 
 dependencies {
     //grpc
-    implementation 'io.grpc:grpc-netty-shaded:1.23.0'
+    implementation 'io.grpc:grpc-netty-shaded:1.23.0' //shaded = include SSL libraries
     implementation 'io.grpc:grpc-protobuf:1.23.0'
     implementation 'io.grpc:grpc-stub:1.23.0'
 

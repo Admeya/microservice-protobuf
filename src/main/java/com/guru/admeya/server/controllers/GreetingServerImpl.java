@@ -15,6 +15,7 @@ public class GreetingServerImpl extends GreetServiceGrpc.GreetServiceImplBase {
     @Override
     public void greet(GreetRequest request, StreamObserver<GreetResponse> responseObserver) {
 
+        // extract the fields we need
         Greeting greeting = request.getGreeting();
         String firstName = greeting.getFirstName();
 
@@ -24,7 +25,7 @@ public class GreetingServerImpl extends GreetServiceGrpc.GreetServiceImplBase {
             .setResult(result)
             .build();
 
-        // send the response;
+        // send the response
         responseObserver.onNext(response);
 
         // complete the RPC call

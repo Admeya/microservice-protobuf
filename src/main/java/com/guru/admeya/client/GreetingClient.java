@@ -16,32 +16,39 @@ import java.util.concurrent.TimeUnit;
 
 public class GreetingClient {
     public static void main(String[] args) {
-
         GreetingClient main = new GreetingClient();
-        main.run();
+        ManagedChannel channel = main.run();
+        main.firstGreeting(channel);
+        System.out.println("Shutting down");
+        channel.shutdown();
     }
 
     private void firstGreeting(ManagedChannel channel) {
         // DummyServiceGrpc.DummyServiceBlockingStub syncClient = DummyServiceGrpc.newBlockingStub(channel);
 
-        GreetServiceGrpc.GreetServiceBlockingStub greetClient = GreetServiceGrpc.newBlockingStub(channel);
+        // created a greet service client (blocking - synchronous
+        GreetServiceGrpc.GreetServiceBlockingStub greetClient =
+            GreetServiceGrpc.newBlockingStub(channel);
 
+        // created a protocol buffer greeting message
         Greeting greeting = Greeting
             .newBuilder()
             .setFirstName("Irina")
             .setLastName("Bykova")
             .build();
 
+        // do the same for a GreetRequest
         GreetRequest greetRequest = GreetRequest
             .newBuilder()
             .setGreeting(greeting)
             .build();
 
+        // call the RPC and get back a GreetResponse (protocol buffers)
         GreetResponse greetResponse = greetClient.greet(greetRequest);
         System.out.println(greetResponse.getResult());
     }
 
-    private void run () {
+    private ManagedChannel run() {
         System.out.println("hello i'm a gRPC client");
 
         ManagedChannel channel = ManagedChannelBuilder
@@ -50,12 +57,10 @@ public class GreetingClient {
             .build();
         System.out.println("Creating stub");
 
-        doUnaryCallWithDeadline(channel, 4000, "");
-      //  doUnaryCallWithDeadline(channel, 100, "");
+        //  doUnaryCallWithDeadline(channel, 4000, "");
+        //  doUnaryCallWithDeadline(channel, 100, "");
 
-
-        System.out.println("Shutting down");
-        channel.shutdown();
+        return channel;
     }
 
     private void doUnaryCallWithDeadline(ManagedChannel channel, int duration, String text) {
@@ -63,11 +68,12 @@ public class GreetingClient {
 
         try {
             System.out.println(String.format("Sending a request with a deadline of %s ms", duration));
-            GreetWithDeadLineResponse response = blockingStub.withDeadline(Deadline.after(duration, TimeUnit.MILLISECONDS))
+            GreetWithDeadLineResponse response = blockingStub
+                .withDeadline(Deadline.after(duration, TimeUnit.MILLISECONDS))
                 .greetWithDeadline(
-                GreetWithDeadLineRequest.newBuilder()
-                    .setGreeting(Greeting.newBuilder().setFirstName("Irina").getDefaultInstanceForType())
-                    .build());
+                    GreetWithDeadLineRequest.newBuilder()
+                        .setGreeting(Greeting.newBuilder().setFirstName("Irina").getDefaultInstanceForType())
+                        .build());
         } catch (StatusRuntimeException e) {
             if (e.getStatus() == Status.DEADLINE_EXCEEDED) {
                 System.out.println("Deadline has been exceeded, we don't want the responce");

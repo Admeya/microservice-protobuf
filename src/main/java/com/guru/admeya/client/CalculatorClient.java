@@ -20,17 +20,21 @@ public class CalculatorClient {
             .build();
         System.out.println("Creating stub");
 
-//        CalcResultGrpc.CalcResultBlockingStub stub = CalcResultGrpc.newBlockingStub(channel);
-//        Calculator.calcRequest request = Calculator.calcRequest.newBuilder().setFirstNumber(10)
-//        .setSecondNumber(3).build();
-//        Calculator.calcResponse response = stub.calculator(request);
-//        System.out.println(response.getResult());
+        sumTwoNumbers(channel);
 
-        doErrorCall(channel);
+       // doErrorCall(channel);
 
         System.out.println("Shutting down");
         channel.shutdown();
 
+    }
+
+    private static void sumTwoNumbers(ManagedChannel channel) {
+        CalcResultGrpc.CalcResultBlockingStub stub = CalcResultGrpc.newBlockingStub(channel);
+        Calculator.calcRequest request = Calculator.calcRequest.newBuilder().setFirstNumber(10)
+            .setSecondNumber(3).build();
+        Calculator.calcResponse response = stub.calculator(request);
+        System.out.println(response.getResult());
     }
 
     private static void doErrorCall(ManagedChannel channel) {
