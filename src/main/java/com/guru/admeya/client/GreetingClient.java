@@ -1,5 +1,7 @@
 package com.guru.admeya.client;
 
+import com.proto.greet.GreetEveryoneRequest;
+import com.proto.greet.GreetEveryoneResponse;
 import com.proto.greet.GreetManyTimesRequest;
 import com.proto.greet.GreetRequest;
 import com.proto.greet.GreetResponse;
@@ -10,10 +12,12 @@ import com.proto.greet.Greeting;
 import com.proto.greet.LongGreetRequest;
 import com.proto.greet.LongGreetResponse;
 import io.grpc.Deadline;
+import io.grpc.ManagedChannel;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
+import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -25,13 +29,56 @@ public class GreetingClient extends GrpcClient{
         GreetingClient main = new GreetingClient();
         main.run();
         // created a greet service client (blocking - synchronous
-        GreetServiceGrpc.GreetServiceBlockingStub greetClient = main.createStubGreet(channel);
+       // GreetServiceGrpc.GreetServiceBlockingStub greetClient = main.createStubGreet(channel);
         //main.doUnaryCall(channel, greetClient);
         //main.doServerStreamingCall(greetClient);
-        main.doClientStreamingCall();
+        //main.doClientStreamingCall();
+        main.doBidiStreamingCall(channel);
 
         System.out.println("Shutting down");
         channel.shutdown();
+    }
+
+    private void doBidiStreamingCall(ManagedChannel channel) {
+        GreetServiceGrpc.GreetServiceStub asyncClient = GreetServiceGrpc.newStub(channel);
+        CountDownLatch latch = new CountDownLatch(1);
+
+        StreamObserver<GreetEveryoneRequest> requestObserver = asyncClient.greetEveryone(
+            new StreamObserver<GreetEveryoneResponse>() {
+                @Override
+                public void onNext(GreetEveryoneResponse value) {
+                    System.out.println("Response from server: " + value.getResult());
+                }
+
+                @Override
+                public void onError(Throwable throwable) {
+                    latch.countDown();
+                }
+
+                @Override
+                public void onCompleted() {
+                    System.out.println("Server is done sending data");
+                    latch.countDown();
+                }
+            });
+
+        Arrays.asList("Stephan", "John", "Marc", "Patricia").forEach(
+            name ->
+            {
+                System.out.println("Sending: " + name);
+                requestObserver.onNext(GreetEveryoneRequest.newBuilder()
+                    .setGreeting(Greeting.newBuilder()
+                        .setFirstName(name))
+                    .build());
+            }
+        );
+
+        requestObserver.onCompleted();
+        try {
+            latch.await(3, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private void doClientStreamingCall() {
