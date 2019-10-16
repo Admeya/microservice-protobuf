@@ -3,6 +3,8 @@ package com.guru.admeya.client;
 import com.proto.calculator.CalculatorServiceGrpc;
 import com.proto.calculator.ComputeAverageRequest;
 import com.proto.calculator.ComputeAverageResponse;
+import com.proto.calculator.FindMaximumRequest;
+import com.proto.calculator.FindMaximumResponse;
 import com.proto.calculator.PrimeNumberDecompositionRequest;
 import com.proto.calculator.SquareRootRequest;
 import com.proto.calculator.SumRequest;
@@ -10,6 +12,7 @@ import com.proto.calculator.SumResponse;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
+import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -21,7 +24,8 @@ public class CalculatorClient extends GrpcClient {
         // CalculatorServiceGrpc.CalculatorServiceBlockingStub greetClient = main.createStubCalc(channel);
         //main.sumTwoNumbers(channel, greetClient);
         //main.primeDivision(greetClient);
-        main.doClientStreamingCall();
+       // main.doClientStreamingCall();
+        main.doBiDiStreamingCall();
         // main.doErrorCall(channel);
         System.out.println("Shutting down");
         channel.shutdown();
@@ -62,6 +66,51 @@ public class CalculatorClient extends GrpcClient {
 
         try {
             latch.await(5L, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void doBiDiStreamingCall() {
+        CalculatorServiceGrpc.CalculatorServiceStub asyncClient = CalculatorServiceGrpc.newStub(channel);
+        CountDownLatch latch = new CountDownLatch(1);
+
+        StreamObserver<FindMaximumRequest> requestObserver = asyncClient.findMaximum(new StreamObserver<FindMaximumResponse>() {
+            @Override
+            public void onNext(FindMaximumResponse value) {
+                System.out.println("Got new maximum from Server " + value.getMaximum());
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                latch.countDown();
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("Server is done sending messages");
+            }
+        });
+
+        Arrays.asList(3, 5, 17, 9, 8, 30, 12).forEach(
+            number -> {
+                System.out.println("Sending number " + number);
+                requestObserver.onNext(
+                    FindMaximumRequest.newBuilder()
+                        .setNumber(number)
+                        .build()
+                );
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        );
+        requestObserver.onCompleted();
+
+        try {
+            latch.await(3L, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

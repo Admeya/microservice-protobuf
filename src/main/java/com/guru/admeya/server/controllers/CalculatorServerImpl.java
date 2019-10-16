@@ -3,6 +3,8 @@ package com.guru.admeya.server.controllers;
 import com.proto.calculator.CalculatorServiceGrpc;
 import com.proto.calculator.ComputeAverageRequest;
 import com.proto.calculator.ComputeAverageResponse;
+import com.proto.calculator.FindMaximumRequest;
+import com.proto.calculator.FindMaximumResponse;
 import com.proto.calculator.PrimeNumberDecompositionRequest;
 import com.proto.calculator.PrimeNumberDecompositionResponse;
 import com.proto.calculator.SquareRootRequest;
@@ -93,5 +95,43 @@ public class CalculatorServerImpl extends CalculatorServiceGrpc.CalculatorServic
             }
         };
         return requestObserver;
+    }
+
+    @Override public StreamObserver<FindMaximumRequest> findMaximum(
+        StreamObserver<FindMaximumResponse> responseObserver) {
+        return new StreamObserver<FindMaximumRequest>() {
+
+            int currentMaximum = 0;
+
+            @Override
+            public void onNext(FindMaximumRequest value) {
+                int currentNumber = value.getNumber();
+
+                if (currentNumber > currentMaximum) {
+                    responseObserver.onNext(
+                        FindMaximumResponse.newBuilder()
+                            .setMaximum(currentNumber)
+                            .build()
+                    );
+                }
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                responseObserver.onCompleted();
+            }
+
+            @Override
+            public void onCompleted() {
+                // send the current last maximum
+                responseObserver.onNext(
+                    FindMaximumResponse.newBuilder()
+                        .setMaximum(currentMaximum)
+                        .build()
+                );
+                // the server is done sending data
+                responseObserver.onCompleted();
+            }
+        };
     }
 }
