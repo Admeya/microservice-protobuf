@@ -37,6 +37,7 @@ public class CalculatorServerImpl extends CalculatorServiceGrpc.CalculatorServic
                     .setNumberRoot(numberRoot)
                     .build()
             );
+            responseObserver.onCompleted();
         } else {
             // we construct the exception
             responseObserver.onError(

@@ -21,12 +21,12 @@ public class CalculatorClient extends GrpcClient {
         CalculatorClient main = new CalculatorClient();
         main.run();
         // created a greet service client (blocking - synchronous
-        // CalculatorServiceGrpc.CalculatorServiceBlockingStub greetClient = main.createStubCalc(channel);
+        CalculatorServiceGrpc.CalculatorServiceBlockingStub greetClient = main.createStubCalc(channel);
         //main.sumTwoNumbers(channel, greetClient);
         //main.primeDivision(greetClient);
-       // main.doClientStreamingCall();
-        main.doBiDiStreamingCall();
-        // main.doErrorCall(channel);
+        // main.doClientStreamingCall();
+        //main.doBiDiStreamingCall();
+        main.doErrorCall(greetClient);
         System.out.println("Shutting down");
         channel.shutdown();
 
