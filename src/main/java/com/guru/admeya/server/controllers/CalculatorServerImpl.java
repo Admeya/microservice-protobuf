@@ -48,7 +48,8 @@ public class CalculatorServerImpl extends CalculatorServiceGrpc.CalculatorServic
         }
     }
 
-    @Override public void primeNumberDecomposition(PrimeNumberDecompositionRequest request,
+    @Override
+    public void primeNumberDecomposition(PrimeNumberDecompositionRequest request,
         StreamObserver<PrimeNumberDecompositionResponse> responseObserver) {
         Integer number = request.getNumber();
         Integer divisor = 2;
@@ -64,7 +65,8 @@ public class CalculatorServerImpl extends CalculatorServiceGrpc.CalculatorServic
         }
     }
 
-    @Override public StreamObserver<ComputeAverageRequest> computeAverage(
+    @Override
+    public StreamObserver<ComputeAverageRequest> computeAverage(
         StreamObserver<ComputeAverageResponse> responseObserver) {
 
         StreamObserver<ComputeAverageRequest> requestObserver = new StreamObserver<ComputeAverageRequest>() {
@@ -97,8 +99,8 @@ public class CalculatorServerImpl extends CalculatorServiceGrpc.CalculatorServic
         return requestObserver;
     }
 
-    @Override public StreamObserver<FindMaximumRequest> findMaximum(
-        StreamObserver<FindMaximumResponse> responseObserver) {
+    @Override
+    public StreamObserver<FindMaximumRequest> findMaximum(StreamObserver<FindMaximumResponse> responseObserver) {
         return new StreamObserver<FindMaximumRequest>() {
 
             int currentMaximum = 0;
@@ -108,6 +110,7 @@ public class CalculatorServerImpl extends CalculatorServiceGrpc.CalculatorServic
                 int currentNumber = value.getNumber();
 
                 if (currentNumber > currentMaximum) {
+                    currentMaximum = currentNumber;
                     responseObserver.onNext(
                         FindMaximumResponse.newBuilder()
                             .setMaximum(currentNumber)
