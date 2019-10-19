@@ -12,12 +12,13 @@ import com.proto.calculator.SumResponse;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
+import javax.net.ssl.SSLException;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class CalculatorClient extends GrpcClient {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SSLException {
         CalculatorClient main = new CalculatorClient();
         main.run();
         // created a greet service client (blocking - synchronous

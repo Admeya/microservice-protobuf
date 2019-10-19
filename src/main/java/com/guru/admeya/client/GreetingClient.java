@@ -17,23 +17,25 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
+import javax.net.ssl.SSLException;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class GreetingClient extends GrpcClient{
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SSLException {
         // DummyServiceGrpc.DummyServiceBlockingStub syncClient = DummyServiceGrpc.newBlockingStub(channel);
 
-        GreetingClient main = new GreetingClient();
-        main.run();
+        GreetingClient greetingClient = new GreetingClient();
+        greetingClient.run();
         // created a greet service client (blocking - synchronous
-       // GreetServiceGrpc.GreetServiceBlockingStub greetClient = main.createStubGreet(channel);
-        //main.doUnaryCall(channel, greetClient);
-        //main.doServerStreamingCall(greetClient);
-        //main.doClientStreamingCall();
-        main.doBidiStreamingCall(channel);
+        //GreetServiceGrpc.GreetServiceBlockingStub greetClient = greetingClient.createStubGreet(channel);
+        GreetServiceGrpc.GreetServiceBlockingStub greetClient = greetingClient.createStubGreet(secureChannel);
+        greetingClient.doUnaryCall(greetClient);
+        //greetingClient.doServerStreamingCall(greetClient);
+        //greetingClient.doClientStreamingCall();
+        greetingClient.doBidiStreamingCall(channel);
 
         System.out.println("Shutting down");
         channel.shutdown();
