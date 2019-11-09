@@ -1,9 +1,9 @@
 package com.guru.admeya.server;
 
-import com.guru.admeya.server.controllers.CalculatorServerImpl;
 import com.guru.admeya.server.controllers.GreetingServerImpl;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.protobuf.services.ProtoReflectionService;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,23 +14,24 @@ public class GreetingServer {
         System.out.println("hello grpc");
 
         // plaintext server
-        //Server serverPlain = new GreetingServer().getPlainTextServer();
-        Server serverSecurity = new GreetingServer().securityServer();
-        serverSecurity.start();
+        Server serverPlain = new GreetingServer().getPlainTextServer();
+        //Server serverSecurity = new GreetingServer().securityServer();
+        serverPlain.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(()->{
             System.out.println("Received shutdown request");
-            serverSecurity.shutdown();
+            serverPlain.shutdown();
             System.out.println("Successfully stopped the server");
         }));
 
-        serverSecurity.awaitTermination();
+        serverPlain.awaitTermination();
     }
 
     private Server getPlainTextServer() {
         return ServerBuilder.forPort(50051)
             .addService(new GreetingServerImpl())
            // .addService(new CalculatorServerImpl())
+            .addService(ProtoReflectionService.newInstance())
             .build();
     }
 
