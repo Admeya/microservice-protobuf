@@ -4,6 +4,8 @@ import com.proto.blog.Blog;
 import com.proto.blog.BlogServiceGrpc;
 import com.proto.blog.CreateBlogRequest;
 import com.proto.blog.CreateBlogResponse;
+import com.proto.blog.DeleteBlogRequest;
+import com.proto.blog.DeleteBlogResponse;
 import com.proto.blog.ReadBlogRequest;
 import com.proto.blog.ReadBlogResponse;
 import com.proto.blog.UpdateBlogRequest;
@@ -20,13 +22,28 @@ public class BlogClient {
         BlogServiceGrpc.BlogServiceBlockingStub blogClient = BlogServiceGrpc.newBlockingStub(channel);
 
         CreateBlogResponse createBlogResponse = createDocument(blogClient);
-        String blogId = readDocument(blogClient, createBlogResponse);
+
+        String blogId = createBlogResponse.getBlog().getId();
+
+        readDocument(blogClient, blogId);
         updateDocument(blogClient, blogId);
+        deleteDocument(blogClient, blogId);
 
         // created a greet service client (blocking - synchronous
         System.out.println("Shutting down");
         channel.shutdown();
 
+    }
+
+    private static void deleteDocument(BlogServiceGrpc.BlogServiceBlockingStub blogClient, String blogId) {
+        System.out.println("Deleting blog");
+        DeleteBlogResponse deleteBlogResponse = blogClient.deleteBlog(
+            DeleteBlogRequest.newBuilder().setBlogId(blogId).build()
+        );
+        System.out.println("Deleted document with id " + blogId);
+        System.out.println("Read blog after deleting");
+        // this one should return NOT_FOUND
+        readDocument(blogClient, blogId);
     }
 
     private static CreateBlogResponse createDocument(BlogServiceGrpc.BlogServiceBlockingStub blogClient) {
@@ -47,11 +64,10 @@ public class BlogClient {
         return createBlogResponse;
     }
 
-    private static String readDocument(BlogServiceGrpc.BlogServiceBlockingStub blogClient,
-        CreateBlogResponse createBlogResponse) {
-        String blogId = createBlogResponse.getBlog().getId();
+    private static void readDocument(BlogServiceGrpc.BlogServiceBlockingStub blogClient,
+        String blogId) {
 
-        System.out.println("I found just created message!");
+        System.out.println("Try to found blog id " + blogId + " ...");
         ReadBlogResponse response = blogClient.readBlog(ReadBlogRequest.newBuilder()
             .setBlogId(blogId)
             .build());
@@ -63,7 +79,6 @@ public class BlogClient {
         //        ReadBlogResponse notFound = blogClient.readBlog(ReadBlogRequest.newBuilder()
         //            .setBlogId("fakeId")
         //            .build());
-        return blogId;
     }
 
     private static void updateDocument(BlogServiceGrpc.BlogServiceBlockingStub blogClient, String blogId) {
