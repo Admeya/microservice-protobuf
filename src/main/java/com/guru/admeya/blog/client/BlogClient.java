@@ -6,6 +6,7 @@ import com.proto.blog.CreateBlogRequest;
 import com.proto.blog.CreateBlogResponse;
 import com.proto.blog.DeleteBlogRequest;
 import com.proto.blog.DeleteBlogResponse;
+import com.proto.blog.ListBlogRequest;
 import com.proto.blog.ReadBlogRequest;
 import com.proto.blog.ReadBlogResponse;
 import com.proto.blog.UpdateBlogRequest;
@@ -28,11 +29,20 @@ public class BlogClient {
         readDocument(blogClient, blogId);
         updateDocument(blogClient, blogId);
         deleteDocument(blogClient, blogId);
+        getAllDocuments(blogClient);
 
         // created a greet service client (blocking - synchronous
         System.out.println("Shutting down");
         channel.shutdown();
 
+    }
+
+    private static void getAllDocuments(BlogServiceGrpc.BlogServiceBlockingStub blogClient) {
+        // we list the blog in our database
+        blogClient.listBlog(ListBlogRequest.newBuilder().build())
+            .forEachRemaining(
+                listBlogResponse -> System.out.println(listBlogResponse.getBlog().toString())
+            );
     }
 
     private static void deleteDocument(BlogServiceGrpc.BlogServiceBlockingStub blogClient, String blogId) {
@@ -43,7 +53,7 @@ public class BlogClient {
         System.out.println("Deleted document with id " + blogId);
         System.out.println("Read blog after deleting");
         // this one should return NOT_FOUND
-        readDocument(blogClient, blogId);
+        // readDocument(blogClient, blogId);
     }
 
     private static CreateBlogResponse createDocument(BlogServiceGrpc.BlogServiceBlockingStub blogClient) {

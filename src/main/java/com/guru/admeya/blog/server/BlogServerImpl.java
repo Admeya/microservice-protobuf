@@ -11,6 +11,8 @@ import com.proto.blog.CreateBlogRequest;
 import com.proto.blog.CreateBlogResponse;
 import com.proto.blog.DeleteBlogRequest;
 import com.proto.blog.DeleteBlogResponse;
+import com.proto.blog.ListBlogRequest;
+import com.proto.blog.ListBlogResponse;
 import com.proto.blog.ReadBlogRequest;
 import com.proto.blog.ReadBlogResponse;
 import com.proto.blog.UpdateBlogRequest;
@@ -88,7 +90,7 @@ public class BlogServerImpl extends BlogServiceGrpc.BlogServiceImplBase {
             );
         } else {
             System.out.println("Blog found, sending response");
-            Blog blog = documentToBlog(blogId, result);
+            Blog blog = documentToBlog(result);
             responseObserver.onNext(
                 ReadBlogResponse.newBuilder().setBlog(blog).build()
             );
@@ -96,11 +98,11 @@ public class BlogServerImpl extends BlogServiceGrpc.BlogServiceImplBase {
         }
     }
 
-    private Blog documentToBlog(String blogId, Document result) {
+    private Blog documentToBlog(Document result) {
         return Blog.newBuilder().setAuthorId(result.getString("author_id"))
             .setTitle(result.getString("title"))
             .setContent(result.getString("content"))
-            .setId(blogId)
+            .setId(result.getObjectId("_id").toString())
             .build();
     }
 
@@ -146,7 +148,8 @@ public class BlogServerImpl extends BlogServiceGrpc.BlogServiceImplBase {
             System.out.println("Replacing blog in database...");
 
             collection.replaceOne(eq("_id", result.getObjectId("_id")), replacementDoc);
-            Blog resultBlog = documentToBlog(blogId, replacementDoc);
+            replacementDoc.append("_id", new ObjectId(blogId));
+            Blog resultBlog = documentToBlog(replacementDoc);
 
             System.out.println("Replaced! Send the response!");
             responseObserver.onNext(
@@ -181,5 +184,16 @@ public class BlogServerImpl extends BlogServiceGrpc.BlogServiceImplBase {
             responseObserver.onCompleted();
         }
 
+    }
+
+    @Override
+    public void listBlog(ListBlogRequest request, StreamObserver<ListBlogResponse> responseObserver) {
+        System.out.println("Received List Blog request ");
+        collection.find().iterator().forEachRemaining(document -> responseObserver.onNext(
+            ListBlogResponse.newBuilder().setBlog(
+                documentToBlog(document)).build()
+        ));
+
+        responseObserver.onCompleted();
     }
 }
