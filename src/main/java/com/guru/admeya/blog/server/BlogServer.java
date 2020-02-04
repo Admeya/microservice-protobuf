@@ -2,6 +2,7 @@ package com.guru.admeya.blog.server;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.protobuf.services.ProtoReflectionService;
 
 import java.io.IOException;
 
@@ -23,9 +24,11 @@ public class BlogServer {
         serverPlain.awaitTermination();
     }
 
+    //new comment
     private Server getPlainTextServer() {
         return ServerBuilder.forPort(50051)
             .addService(new BlogServerImpl())
+            .addService(ProtoReflectionService.newInstance())
             .build();
     }
 }
